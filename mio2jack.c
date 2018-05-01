@@ -43,7 +43,7 @@ static void usage(void)
     quit(EXIT_FAILURE);
 }
 
-static int process(jack_nframes_t nframes, void* arg)
+static int jack_process(jack_nframes_t nframes, void* arg)
 {
     /* Transfer events from sndio to jack. */
     void* jack_out_buf = jack_port_get_buffer(jack_out, nframes);
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
         quit(EXIT_FAILURE);
     }
 
-    jack_set_process_callback(jack_client, process, NULL);
+    jack_set_process_callback(jack_client, jack_process, NULL);
 
     jack_out = jack_port_register(jack_client, "midi_out",
             JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
