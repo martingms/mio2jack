@@ -6,13 +6,26 @@
 #include <jack/midiport.h>
 
 
+char* mio_port = MIO_PORTANY;
 struct mio_hdl* mio_hdl;
 
+char* jack_client_name = "mio2jack";
 jack_client_t* jack_client;
 jack_port_t* jack_out;
 
 #define MIO_READ_SZ 256
 unsigned char* event_buf;
+
+static void usage(void)
+{
+    extern char* __progname;
+
+    fprintf(stderr,
+            "usage: %s [-h] [-p mio_port] [-n jack_client_name]\n",
+            __progname);
+
+    exit(EXIT_FAILURE);
+}
 
 static int process(jack_nframes_t nframes, void* arg)
 {
@@ -30,13 +43,26 @@ static int process(jack_nframes_t nframes, void* arg)
 
 int main(int argc, char* argv[])
 {
-    /* TODO: check and handle returns */
+    int ch;
+    while ((ch = getopt(argc, argv, "p:n:h")) != -1) {
+        switch (ch) {
+        case 'p':
+            mio_port = optarg;
+            break;
+        case 'n':
+            jack_client_name = optarg;
+            break;
+        case 'h': /* fallthrough */
+        default:
+            usage();
+        }
+    }
 
+    /* TODO: check and handle returns */
     event_buf = malloc(MIO_READ_SZ);
-    /* TODO: port through getopt() */
-    mio_hdl = mio_open(MIO_PORTANY, MIO_IN, 1);
-    /* TODO: name through getopt() */
-    jack_client = jack_client_open("mio2jack", JackNullOption, 0);
+    mio_hdl = mio_open(mio_port, MIO_IN, 1);
+
+    jack_client = jack_client_open(jack_client_name, JackNullOption, 0);
     jack_set_process_callback(jack_client, process, NULL);
 
     jack_out = jack_port_register(jack_client, "midi_out",
