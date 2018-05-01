@@ -45,12 +45,16 @@ static void usage(void)
 
 static int jack_process(jack_nframes_t nframes, void* arg)
 {
-    /* Transfer events from sndio to jack. */
     void* jack_out_buf = jack_port_get_buffer(jack_out, nframes);
     jack_midi_clear_buffer(jack_out_buf);
 
+    /* Read events from sndio and write them to jack. */
     size_t read;
     while (read = mio_read(mio_hdl, event_buf, MIO_READ_SZ)) {
+        /* Note that we are in many cases writing multiple -- possibly
+         * incomplete -- MIDI events to jack with each call to
+         * jack_midi_event_write. Ideally we'd buffer and split so that one call
+         * meant one event, but this seems to work for now. */
         jack_midi_event_write(jack_out_buf, 0, event_buf, read);
     }
 
