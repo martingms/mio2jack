@@ -3,6 +3,9 @@
 `mio2jack` is a tool to expose [sndio](sndio.org) MIDI-ports in
 [jack](jackaudio.org).
 
+For now it only handles one-way communication, that is MIDI events flowing
+in the sndio → jack direction. Patches accepted!
+
 ## Usage
 
     usage: mio2jack [-h] [-p mio_port] [-n jack_client_name]
