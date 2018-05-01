@@ -16,6 +16,15 @@ jack_port_t* jack_out;
 #define MIO_READ_SZ 256
 unsigned char* event_buf;
 
+static void quit(int code)
+{
+    if (event_buf) free(event_buf);
+    if (mio_hdl) mio_close(mio_hdl);
+    if (jack_client) jack_client_close(jack_client);
+
+    exit(code);
+}
+
 static void usage(void)
 {
     extern char* __progname;
@@ -24,7 +33,7 @@ static void usage(void)
             "usage: %s [-h] [-p mio_port] [-n jack_client_name]\n",
             __progname);
 
-    exit(EXIT_FAILURE);
+    quit(EXIT_FAILURE);
 }
 
 static int process(jack_nframes_t nframes, void* arg)
@@ -58,18 +67,40 @@ int main(int argc, char* argv[])
         }
     }
 
-    /* TODO: check and handle returns */
     event_buf = malloc(MIO_READ_SZ);
+    if (!event_buf) {
+        perror("malloc");
+        quit(EXIT_FAILURE);
+    }
     mio_hdl = mio_open(mio_port, MIO_IN, 1);
+    if (!mio_hdl) {
+        fprintf(stderr, "couldn't open sndio port: %s\n", mio_port);
+        quit(EXIT_FAILURE);
+    }
 
     jack_client = jack_client_open(jack_client_name, JackNullOption, 0);
+    if (!jack_client) {
+        fprintf(stderr, "couldn't open jack client\n");
+        quit(EXIT_FAILURE);
+    }
+
     jack_set_process_callback(jack_client, process, NULL);
 
     jack_out = jack_port_register(jack_client, "midi_out",
             JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+    if (!jack_out) {
+        fprintf(stderr, "couldn't register jack output port\n");
+        quit(EXIT_FAILURE);
+    }
 
-    jack_activate(jack_client);
+    if (jack_activate(jack_client)) {
+        fprintf(stderr, "couldn't activate jack client\n");
+        quit(EXIT_FAILURE);
+    }
 
     /* TODO: Install signal handlers to clean up. */
-    while(1) sleep(1);
+    while (1) sleep(1);
+
+    /* unreachable */
+    quit(EXIT_SUCCESS);
 }
