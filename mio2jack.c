@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include <sndio.h>
 #include <jack/jack.h>
@@ -16,6 +17,7 @@ jack_port_t* jack_out;
 #define MIO_READ_SZ 256
 unsigned char* event_buf;
 
+
 static void quit(int code)
 {
     if (event_buf) free(event_buf);
@@ -23,6 +25,11 @@ static void quit(int code)
     if (jack_client) jack_client_close(jack_client);
 
     exit(code);
+}
+
+static void signal_handler(int signal)
+{
+    quit(EXIT_SUCCESS);
 }
 
 static void usage(void)
@@ -93,12 +100,14 @@ int main(int argc, char* argv[])
         quit(EXIT_FAILURE);
     }
 
+    signal(SIGTERM, signal_handler);
+    signal(SIGINT, signal_handler);
+
     if (jack_activate(jack_client)) {
         fprintf(stderr, "couldn't activate jack client\n");
         quit(EXIT_FAILURE);
     }
 
-    /* TODO: Install signal handlers to clean up. */
     while (1) sleep(1);
 
     /* unreachable */
