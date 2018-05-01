@@ -3,7 +3,11 @@
 `mio2jack` is a tool to expose [sndio](sndio.org) MIDI-ports in
 [jack](jackaudio.org).
 
-## Example usage
+## Usage
+
+    usage: mio2jack [-h] [-p mio_port] [-n jack_client_name]
+
+### Examples
 
     $ mio2jack -p midithru/0 -n sndio-midithru/0
 
