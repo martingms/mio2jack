@@ -20,9 +20,9 @@ unsigned char* event_buf;
 
 static void quit(int code)
 {
-    if (event_buf) free(event_buf);
-    if (mio_hdl) mio_close(mio_hdl);
     if (jack_client) jack_client_close(jack_client);
+    if (mio_hdl) mio_close(mio_hdl);
+    if (event_buf) free(event_buf);
 
     exit(code);
 }
